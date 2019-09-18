@@ -4,6 +4,8 @@ namespace Rees\Sanitizer;
 
 use Closure;
 use Illuminate\Container\Container;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class Sanitizer
 {
@@ -30,7 +32,6 @@ class Sanitizer
     {
         // If the container isn't provided...
         if (!$container instanceof Container) {
-
             // ... use an instance of the illuminate container.
             $container = new Container;
         }
@@ -64,11 +65,10 @@ class Sanitizer
         // Process global sanitizers.
         $this->runGlobalSanitizers($rules, $data);
 
-        $availableRules = array_only($rules, array_keys($data));
+        $availableRules = Arr::only($rules, array_keys($data));
 
         // Iterate rules to be applied.
         foreach ($availableRules as $field => $ruleset) {
-
             // Execute sanitizers over a specific field.
             $this->sanitizeField($data, $field, $ruleset);
         }
@@ -133,14 +133,13 @@ class Sanitizer
         }
 
         // Get value from data array.
-        $value = array_get($data, $field);
+        $value = Arr::get($data, $field);
 
         // Iterate the rule set.
         foreach ($ruleset as $rule) {
-
             // If exists, getting parameters
             $parametersSet = array();
-            if (str_contains($rule, ':')) {
+            if (Str::contains($rule, ':')) {
                 list($rule, $parameters) = explode(':', $rule);
                 $parametersSet = explode(',', $parameters);
             }
@@ -156,7 +155,7 @@ class Sanitizer
         }
 
         // Set the sanitized value in the data array
-        array_set($data, $field, $value);
+        Arr::set($data, $field, $value);
     }
 
     /**
@@ -167,7 +166,7 @@ class Sanitizer
      */
     protected function getSanitizer($key)
     {
-        return array_get($this->sanitizers, $key, $key);
+        return Arr::get($this->sanitizers, $key, $key);
     }
 
     /**
@@ -183,14 +182,12 @@ class Sanitizer
 
         // If the sanitizer is a callback...
         if (is_callable($sanitizer)) {
-
             // ...execute the sanitizer and return the mutated value.
             return call_user_func_array($sanitizer, $parameters);
         }
 
         // If the sanitizer is a Closure...
         if ($sanitizer instanceof Closure) {
-
             // ...execute the Closure and return mutated value.
             return $sanitizer(extract($parameters));
         }
@@ -200,7 +197,6 @@ class Sanitizer
 
         // If the sanitizer is a ...
         if (is_callable($sanitizer)) {
-
             // ...execute the sanitizer and return the mutated value.
             return call_user_func_array($sanitizer, $parameters);
         }
